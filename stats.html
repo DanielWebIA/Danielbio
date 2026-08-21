@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DanielWeb7 | Estatísticas de cliques</title>
+<style>
+  :root{
+    --electric:#00BFFF; --neon:#0066FF; --navy:#071426; --black:#000000; --white:#FFFFFF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    min-height:100vh;
+    background: linear-gradient(180deg, var(--black) 0%, var(--navy) 60%, var(--black) 100%);
+    font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+    color:var(--white);
+    display:flex; justify-content:center; padding:56px 20px;
+  }
+  .wrap{ width:100%; max-width:480px; }
+  h1{ font-size:22px; font-weight:800; margin-bottom:6px; }
+  .sub{ color:rgba(255,255,255,0.55); font-size:13.5px; margin-bottom:28px; }
+  .row{
+    display:flex; align-items:center; justify-content:space-between;
+    background: rgba(255,255,255,0.04);
+    border:1px solid rgba(0,191,255,0.22);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:12px;
+  }
+  .row .label{ font-size:14.5px; font-weight:600; }
+  .row .count{
+    font-size:20px; font-weight:800; color:var(--electric);
+    min-width:44px; text-align:right;
+  }
+  .total{
+    margin-top:8px;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px; border-radius:12px;
+    background: linear-gradient(90deg, var(--electric), var(--neon));
+    color:var(--black);
+  }
+  .total .label{ font-weight:800; font-size:15px; }
+  .total .count{ color:var(--black); font-size:22px; }
+  .refresh{
+    margin-top:22px; width:100%; padding:12px; border-radius:10px;
+    background:transparent; border:1px solid rgba(0,191,255,0.4); color:var(--electric);
+    font-weight:700; cursor:pointer; font-size:13.5px;
+  }
+  .note{ margin-top:18px; font-size:11.5px; color:rgba(255,255,255,0.35); line-height:1.5; }
+  .loading{ color:rgba(255,255,255,0.4); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Estatísticas de cliques</h1>
+  <p class="sub">DanielWeb7 — página Link na Bio</p>
+
+  <div id="rows"><p class="loading">Carregando contagens...</p></div>
+
+  <button class="refresh" onclick="loadStats()">Atualizar</button>
+
+  <p class="note">
+    Contagem feita via CountAPI (serviço gratuito, sem login). Os números somam desde a publicação da página
+    e não resetam sozinhos. Esta página de estatísticas é só para você — não precisa deixar linkada
+    na página pública de links.
+  </p>
+</div>
+
+<script>
+  var NAMESPACE = "danielweb7-stage7-linkbio-2026";
+  var ITEMS = [
+    { key: "trafego-pago",   label: "🚀 Gestão de Tráfego Pago" },
+    { key: "criacao-sites",  label: "🌐 Criação de Sites" },
+    { key: "landing-pages",  label: "🧲 Landing Pages" },
+    { key: "loja-virtual",   label: "🛒 Lojas Virtuais" },
+    { key: "redes-sociais",  label: "📱 Redes Sociais" },
+    { key: "consultoria-ia", label: "🤖 Consultoria em IA" },
+    { key: "diagnostico-gratis", label: "💬 Solicitar Diagnóstico Grátis" }
+  ];
+
+  function loadStats() {
+    var rowsEl = document.getElementById("rows");
+    rowsEl.innerHTML = '<p class="loading">Carregando contagens...</p>';
+
+    Promise.all(
+      ITEMS.map(function (item) {
+        return fetch("https://api.countapi.xyz/get/" + NAMESPACE + "/" + item.key)
+          .then(function (r) { return r.json(); })
+          .then(function (data) { return { label: item.label, count: (data && data.value) ? data.value : 0 }; })
+          .catch(function () { return { label: item.label, count: "—" }; });
+      })
+    ).then(function (results) {
+      var total = results.reduce(function (sum, r) { return sum + (typeof r.count === "number" ? r.count : 0); }, 0);
+      var html = results.map(function (r) {
+        return '<div class="row"><span class="label">' + r.label + '</span><span class="count">' + r.count + '</span></div>';
+      }).join("");
+      html += '<div class="total"><span class="label">Total de cliques</span><span class="count">' + total + '</span></div>';
+      rowsEl.innerHTML = html;
+    });
+  }
+
+  loadStats();
+</script>
+</body>
+</html>
